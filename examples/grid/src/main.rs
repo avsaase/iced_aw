@@ -1,10 +1,9 @@
 use iced::widget::{checkbox, container, pick_list, row, slider};
-use iced::Padding;
 use iced::{
     alignment::{Horizontal, Vertical},
     Color, Element, Length, Sandbox, Settings,
 };
-use iced_aw::{grid, grid_row};
+use iced_aw::Grid;
 
 struct App {
     horizontal_alignment: Horizontal,
@@ -97,27 +96,49 @@ impl Sandbox for App {
         let padding_slider =
             slider(0.0..=100.0, self.padding, Message::Padding).width(Length::Fixed(400.0));
 
-        let mut grid = grid!(
-            grid_row!("Horizontal alignment", horizontal_align_pick,),
-            grid_row!("Vertical alignment", vertical_align_pick),
-            grid_row!("Row spacing", row_spacing_slider),
-            grid_row!("Column spacing", col_spacing_slider),
-            grid_row!("Fill space", fill_checkboxes),
-            grid_row!("Padding", padding_slider),
-            grid_row!("Debug mode", debug_mode_check)
-        )
-        .horizontal_alignment(self.horizontal_alignment)
-        .vertical_alignment(self.vertical_alignment)
-        .row_spacing(self.row_spacing)
-        .column_spacing(self.column_spacing)
-        .padding(Padding::new(self.padding));
+        // let mut grid = grid!(
+        //     grid_row!("Horizontal alignment", horizontal_align_pick,),
+        //     grid_row!("Vertical alignment", vertical_align_pick),
+        //     grid_row!("Row spacing", row_spacing_slider),
+        //     grid_row!("Column spacing", col_spacing_slider),
+        //     grid_row!("Fill space", fill_checkboxes),
+        //     grid_row!("Padding", padding_slider),
+        //     grid_row!("Debug mode", debug_mode_check)
+        // )
+        // .horizontal_alignment(self.horizontal_alignment)
+        // .vertical_alignment(self.vertical_alignment)
+        // .row_spacing(self.row_spacing)
+        // .column_spacing(self.column_spacing)
+        // .padding(Padding::new(self.padding));
 
-        if self.fill_width {
-            grid = grid.width(Length::Fill);
-        }
-        if self.fill_height {
-            grid = grid.height(Length::Fill);
-        }
+        // if self.fill_width {
+        //     grid = grid.width(Length::Fill);
+        // }
+        // if self.fill_height {
+        //     grid = grid.height(Length::Fill);
+        // }
+        let grid = Grid::new()
+            .push("Horizontal alignment")
+            .push(horizontal_align_pick)
+            .end_row()
+            .push("Vertical alignment")
+            .push(vertical_align_pick)
+            .end_row()
+            .push("Row spacing")
+            .push(row_spacing_slider)
+            .end_row()
+            .push("Columns spacing")
+            .push(col_spacing_slider)
+            .end_row()
+            .push("Fill space")
+            .push(fill_checkboxes)
+            .end_row()
+            .push("Padding")
+            .push(padding_slider)
+            .end_row()
+            .push("Debug layout")
+            .push(debug_mode_check)
+            .end_row();
 
         let mut contents = Element::from(grid);
         if self.debug_layout {

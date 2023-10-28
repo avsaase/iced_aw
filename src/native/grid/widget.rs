@@ -23,7 +23,7 @@ where
     }
 
     fn layout(&self, renderer: &Renderer, limits: &Limits) -> Node {
-        if self.element_count() == 0 {
+        if self.children.is_empty() {
             return Node::new(Size::ZERO);
         }
 
@@ -36,13 +36,11 @@ where
             "At least one row height is required"
         );
 
-        layout(
+        match layout(
             renderer,
             limits,
-            self.column_count(),
-            self.row_count(),
-            self.element_count(),
-            &self.rows,
+            &self.children,
+            &self.positions,
             self.column_spacing,
             self.row_spacing,
             self.padding,
@@ -52,7 +50,10 @@ where
             self.height,
             &self.column_widths,
             &self.row_heights,
-        )
+        ) {
+            Ok(node) => node,
+            Err(err) => Node::new(Size::ZERO),
+        }
     }
 
     fn draw(
@@ -66,7 +67,8 @@ where
         viewport: &Rectangle,
     ) {
         for ((element, state), layout) in self
-            .elements_iter()
+            .children
+            .iter()
             .zip(&state.children)
             .zip(layout.children())
         {
@@ -77,11 +79,11 @@ where
     }
 
     fn children(&self) -> Vec<Tree> {
-        self.elements_iter().map(Tree::new).collect()
+        self.children.iter().map(Tree::new).collect()
     }
 
     fn diff(&self, tree: &mut Tree) {
-        tree.diff_children(&self.elements_iter().collect::<Vec<_>>());
+        tree.diff_children(&self.children.iter().collect::<Vec<_>>());
     }
 
     fn operate(
@@ -92,7 +94,8 @@ where
         operation: &mut dyn Operation<Message>,
     ) {
         for ((element, state), layout) in self
-            .elements_iter()
+            .children
+            .iter()
             .zip(&mut state.children)
             .zip(layout.children())
         {
@@ -114,7 +117,8 @@ where
         viewport: &Rectangle,
     ) -> event::Status {
         let children_status = self
-            .elements_iter_mut()
+            .children
+            .iter_mut()
             .zip(&mut state.children)
             .zip(layout.children())
             .map(|((child, state), layout)| {
@@ -141,7 +145,8 @@ where
         viewport: &Rectangle,
         renderer: &Renderer,
     ) -> mouse::Interaction {
-        self.elements_iter()
+        self.children
+            .iter()
             .zip(&state.children)
             .zip(layout.children())
             .map(|((e, state), layout)| {
@@ -160,7 +165,8 @@ where
         renderer: &Renderer,
     ) -> Option<overlay::Element<'b, Message, Renderer>> {
         let children = self
-            .elements_iter_mut()
+            .children
+            .iter_mut()
             .zip(&mut tree.children)
             .zip(layout.children())
             .filter_map(|((child, state), layout)| {

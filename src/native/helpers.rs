@@ -11,30 +11,30 @@ use std::{borrow::Cow, fmt::Display, hash::Hash};
 ///
 /// [`Grid`]: crate::Grid
 /// [`GridRow`]: crate::GridRow
-#[cfg(feature = "grid")]
-#[macro_export]
-macro_rules! grid {
-    () => (
-        $crate::Grid::new()
-    );
-    ($($x:expr),+ $(,)?) => (
-        $crate::Grid::with_rows(vec![$($x),+])
-    );
-}
+// #[cfg(feature = "grid")]
+// #[macro_export]
+// macro_rules! grid {
+//     () => (
+//         $crate::Grid::new()
+//     );
+//     ($($x:expr),+ $(,)?) => (
+//         $crate::Grid::with_rows(vec![$($x),+])
+//     );
+// }
 
 /// Creates a [`GridRow`] with the given widgets.
 ///
 /// [`GridRow`]: crate::GridRow
-#[cfg(feature = "grid")]
-#[macro_export]
-macro_rules! grid_row {
-    () => (
-        $crate::GridRow::new()
-    );
-    ($($x:expr),+ $(,)?) => (
-        $crate::GridRow::with_elements(vec![$(iced::Element::from($x)),+])
-    );
-}
+// #[cfg(feature = "grid")]
+// #[macro_export]
+// macro_rules! grid_row {
+//     () => (
+//         $crate::GridRow::new()
+//     );
+//     ($($x:expr),+ $(,)?) => (
+//         $crate::GridRow::with_elements(vec![$(iced::Element::from($x)),+])
+//     );
+// }
 
 /// Creates a horizontal [`Wrap`] with the given children.
 ///
@@ -211,34 +211,34 @@ where
     crate::FloatingElement::new(underlay, element)
 }
 
-#[cfg(feature = "grid")]
-/// Shortcut helper to create a [`Grid`] Widget.
-///
-/// [`Grid`]: crate::grid::Grid
-#[must_use]
-pub fn grid<Message, Renderer>(
-    rows: Vec<crate::GridRow<'_, Message, Renderer>>,
-) -> crate::Grid<'_, Message, Renderer>
-where
-    Renderer: core::Renderer,
-{
-    crate::Grid::with_rows(rows)
-}
+// #[cfg(feature = "grid")]
+// /// Shortcut helper to create a [`Grid`] Widget.
+// ///
+// /// [`Grid`]: crate::grid::Grid
+// #[must_use]
+// pub fn grid<Message, Renderer>(
+//     rows: Vec<crate::GridRow<'_, Message, Renderer>>,
+// ) -> crate::Grid<'_, Message, Renderer>
+// where
+//     Renderer: core::Renderer,
+// {
+//     crate::Grid::with_rows(rows)
+// }
 
-#[cfg(feature = "grid")]
-/// Shortcut helper to create a [`GridRow`] for the [`Grid`] Widget.
-///
-/// [`GridRow`]: crate::GridRow
-/// [`Grid`]: crate::Grid
-#[must_use]
-pub fn grid_row<'a, Message, Renderer>(
-    elements: Vec<impl Into<Element<'a, Message, Renderer>>>,
-) -> crate::GridRow<'a, Message, Renderer>
-where
-    Renderer: core::Renderer,
-{
-    crate::GridRow::with_elements(elements)
-}
+// #[cfg(feature = "grid")]
+// /// Shortcut helper to create a [`GridRow`] for the [`Grid`] Widget.
+// ///
+// /// [`GridRow`]: crate::GridRow
+// /// [`Grid`]: crate::Grid
+// #[must_use]
+// pub fn grid_row<'a, Message, Renderer>(
+//     elements: Vec<impl Into<Element<'a, Message, Renderer>>>,
+// ) -> crate::GridRow<'a, Message, Renderer>
+// where
+//     Renderer: core::Renderer,
+// {
+//     crate::GridRow::with_elements(elements)
+// }
 
 #[cfg(feature = "wrap")]
 /// Shortcut helper to create a horizontal [`Wrap`] Widget.

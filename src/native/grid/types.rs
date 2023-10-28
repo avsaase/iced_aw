@@ -8,7 +8,8 @@ use iced_widget::core::{
 /// The number of columns is determined by the row with the most elements.
 #[allow(missing_debug_implementations)]
 pub struct Grid<'a, Message, Renderer = crate::Renderer> {
-    pub(super) rows: Vec<GridRow<'a, Message, Renderer>>,
+    pub(super) children: Vec<Element<'a, Message, Renderer>>,
+    pub(super) positions: Vec<Position>,
     pub(super) horizontal_alignment: Horizontal,
     pub(super) vertical_alignment: Vertical,
     pub(super) column_spacing: Pixels,
@@ -18,6 +19,8 @@ pub struct Grid<'a, Message, Renderer = crate::Renderer> {
     pub(super) height: Length,
     pub(super) column_widths: Vec<Length>,
     pub(super) row_heights: Vec<Length>,
+    pub(super) column: u16,
+    pub(super) row: u16,
 }
 
 impl<'a, Message, Renderer> Default for Grid<'a, Message, Renderer>
@@ -26,7 +29,8 @@ where
 {
     fn default() -> Self {
         Self {
-            rows: Vec::new(),
+            children: Vec::new(),
+            positions: Vec::new(),
             horizontal_alignment: Horizontal::Left,
             vertical_alignment: Vertical::Center,
             column_spacing: 1.0.into(),
@@ -36,6 +40,8 @@ where
             height: Length::Shrink,
             column_widths: vec![Length::Fill],
             row_heights: vec![Length::Fill],
+            column: 0,
+            row: 0,
         }
     }
 }
@@ -50,19 +56,40 @@ where
         Self::default()
     }
 
-    /// Creates a [`Grid`] with the given [`GridRow`]s.
+    /// Adds a widget to the [`Grid`]. The widget is added as a new column in the current row.
     #[must_use]
-    pub fn with_rows(rows: Vec<GridRow<'a, Message, Renderer>>) -> Self {
-        Self {
-            rows,
-            ..Default::default()
-        }
+    pub fn push(mut self, widget: impl Into<Element<'a, Message, Renderer>>) -> Self {
+        self.children.push(widget.into());
+        self.positions.push(Position {
+            column: self.column,
+            row: self.row,
+            width: 1,
+            height: 1,
+        });
+        self.column += 1;
+        self
     }
 
-    /// Adds a [`GridRow`] to the [`Grid`].
+    /// Adds a widget to the [`Grid`] at the given [`Position`].
     #[must_use]
-    pub fn push(mut self, row: GridRow<'a, Message, Renderer>) -> Self {
-        self.rows.push(row);
+    pub fn push_at_position(
+        mut self,
+        widget: impl Into<Element<'a, Message, Renderer>>,
+        position: impl Into<Position>,
+    ) -> Self {
+        let position: Position = position.into();
+        self.children.push(widget.into());
+        self.positions.push(position);
+        self.column = position.column + position.width;
+        self.row = position.row + position.height;
+        self
+    }
+
+    /// End the current row. Subsequent widget are added to a new row.
+    #[must_use]
+    pub fn end_row(mut self) -> Self {
+        self.column = 0;
+        self.row += 1;
         self
     }
 
@@ -171,75 +198,72 @@ where
         self
     }
 
-    pub(super) fn elements_iter(&self) -> impl Iterator<Item = &Element<'a, Message, Renderer>> {
-        self.rows.iter().flat_map(|row| row.elements.iter())
-    }
+    // pub(super) fn elements_iter(&self) -> impl Iterator<Item = &Element<'a, Message, Renderer>> {
+    //     self.rows.iter().flat_map(|row| row.elements.iter())
+    // }
 
-    pub(super) fn elements_iter_mut(
-        &mut self,
-    ) -> impl Iterator<Item = &mut Element<'a, Message, Renderer>> {
-        self.rows.iter_mut().flat_map(|row| row.elements.iter_mut())
-    }
+    // pub(super) fn elements_iter_mut(
+    //     &mut self,
+    // ) -> impl Iterator<Item = &mut Element<'a, Message, Renderer>> {
+    //     self.rows.iter_mut().flat_map(|row| row.elements.iter_mut())
+    // }
 
-    pub(super) fn column_count(&self) -> usize {
-        self.rows
-            .iter()
-            .map(|row| row.elements.len())
-            .max()
-            .unwrap_or(0)
-    }
+    // pub(super) fn column_count(&self) -> usize {
+    //     self.rows
+    //         .iter()
+    //         .map(|row| row.elements.len())
+    //         .max()
+    //         .unwrap_or(0)
+    // }
 
-    pub(super) fn row_count(&self) -> usize {
-        self.rows.len()
-    }
+    // pub(super) fn row_count(&self) -> usize {
+    //     self.rows.len()
+    // }
 
-    pub(super) fn element_count(&self) -> usize {
-        self.rows.iter().map(|row| row.elements.len()).sum()
-    }
+    // pub(super) fn element_count(&self) -> usize {
+    //     self.rows.iter().map(|row| row.elements.len()).sum()
+    // }
 }
 
-/// A container that distributes its contents in a row of a [`crate::Grid`].
-#[allow(missing_debug_implementations)]
-pub struct GridRow<'a, Message, Renderer = crate::Renderer> {
-    pub(crate) elements: Vec<Element<'a, Message, Renderer>>,
+/// The position and size of a widget in the [`Grid`].
+#[derive(Debug, Clone, Copy)]
+pub struct Position {
+    pub(super) column: u16,
+    pub(super) row: u16,
+    pub(super) width: u16,
+    pub(super) height: u16,
 }
 
-impl<'a, Message, Renderer> Default for GridRow<'a, Message, Renderer>
-where
-    Renderer: iced_widget::core::Renderer,
-{
-    fn default() -> Self {
+impl Position {
+    /// Creates a new [`Position`]
+    pub fn new(column: u16, row: u16, width: u16, height: u16) -> Self {
         Self {
-            elements: Vec::new(),
+            column,
+            row,
+            width,
+            height,
         }
     }
 }
 
-impl<'a, Message, Renderer> GridRow<'a, Message, Renderer>
-where
-    Renderer: iced_widget::core::Renderer,
-{
-    /// Creates a new [`GridRow`].
-    #[must_use]
-    pub fn new() -> Self {
-        Self::default()
-    }
-
-    /// Creates a new [`GridRow`] with the given widgets.
-    #[must_use]
-    pub fn with_elements(children: Vec<impl Into<Element<'a, Message, Renderer>>>) -> Self {
+impl From<(u16, u16)> for Position {
+    fn from(value: (u16, u16)) -> Self {
         Self {
-            elements: children.into_iter().map(std::convert::Into::into).collect(),
+            column: value.0,
+            row: value.1,
+            width: 1,
+            height: 1,
         }
     }
+}
 
-    /// Adds a widget to the [`GridRow`].
-    #[must_use]
-    pub fn push<E>(mut self, element: E) -> Self
-    where
-        E: Into<Element<'a, Message, Renderer>>,
-    {
-        self.elements.push(element.into());
-        self
+impl From<(u16, u16, u16, u16)> for Position {
+    fn from(value: (u16, u16, u16, u16)) -> Self {
+        Self {
+            column: value.0,
+            row: value.1,
+            width: value.2,
+            height: value.3,
+        }
     }
 }
